@@ -1,4 +1,4 @@
-#include "svm.h"
+#include "libsvm/svm.h"
 #include <stdlib.h>
 #include "emscripten.h"
 
@@ -46,7 +46,7 @@ void free_mode(svm_model* model) {
     svm_free_and_destroy_model(&model);
 }
 
-svm_problem* make_sample(int nb_feat, int nb_dim) {
+svm_problem* make_samples_internal(int nb_feat, int nb_dim) {
     svm_problem* sample = MALLOC(svm_problem, 1);
     sample->l = nb_feat;
     sample->y = MALLOC(double, nb_feat);
@@ -60,7 +60,7 @@ svm_problem* make_sample(int nb_feat, int nb_dim) {
 
 EMSCRIPTEN_KEEPALIVE
 svm_problem* make_samples(double* data, double* labels, int nb_feat, int nb_dim) {
-    svm_problem* samples = make_sample(nb_feat, nb_dim);
+    svm_problem* samples = make_samples_internal(nb_feat, nb_dim);
     for (int i = 0; i < nb_feat; i++) {
         for (int j = 0; j < nb_dim; j++) {
             samples->x[i][j].index = j + 1;
