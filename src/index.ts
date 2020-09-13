@@ -66,10 +66,10 @@ class SVMParam {
 }
 
 class SVM {
-    public param: SVMParam;
-    public paramPointer: number;
-    public samplesPointer: number;
-    public modelPointer: number;
+    readonly param: SVMParam;
+    private paramPointer: number;
+    private samplesPointer: number;
+    private modelPointer: number;
     private ready: Promise<void>;
 
     constructor(param?: SVMParam) {
@@ -86,21 +86,41 @@ class SVM {
     public async train() {
         await this.ready;
         if (this.paramPointer == null || this.samplesPointer == null) return;
+        if (this.modelPointer == null) libsvm._free_model(this.modelPointer);
         this.modelPointer = libsvm._train_model(this.samplesPointer, this.paramPointer);
     }
 
     public async predict(data: Array<number>): Promise<number> {
         await this.ready;
-        return libsvm._predict_one(this.modelPointer, data, data.length) as number;
+
+        if (this.modelPointer == null) {
+            console.error("Model should be trained first");
+            return;
+        }
+
+        const dataPtr = libsvm._malloc(data.length * 8);
+        libsvm.HEAPF64.set(data, dataPtr/8);
+
+        return libsvm._predict_one(this.modelPointer, dataPtr, data.length) as number;
     }
 
     public async feedSamples(data: Array<Array<number>>, labels: Array<number>) {
         await this.ready;
-        const encodeData: Array<number> = data.reduce((prev, curr) => prev.concat(curr), []);
-        this.samplesPointer = libsvm._make_samples(encodeData, labels, data.length, data[0].length);
+
+        if (this.samplesPointer == null) libsvm._free_sample(this.samplesPointer);
+
+        const encodeData = new Float64Array(data.reduce((prev, curr) => prev.concat(curr), []));
+        
+        const dataPtr = libsvm._malloc(encodeData.length * 8);
+        libsvm.HEAPF64.set(encodeData, dataPtr/8);
+        
+        const labelPtr = libsvm._malloc(labels.length * 8);
+        libsvm.HEAPF64.set(encodeData, labelPtr/8);
+        
+        this.samplesPointer = libsvm._make_samples(dataPtr, labelPtr, data.length, data[0].length);
     }
 
-    private async feedParam() {
+    public async feedParam() {
         await this.ready;
         const {
             svm_type,
@@ -119,37 +139,24 @@ class SVM {
             weight_label,
             weight
         } = this.param;
+
+        if (this.paramPointer == null) libsvm._free(this.paramPointer);
+
+        const weightLabelPtr = libsvm._malloc(nr_weight * 4);
+        libsvm.HEAP32.set(new Int32Array(weight_label), weightLabelPtr/4);
+        
+        const weightlPtr = libsvm._malloc(nr_weight * 8);
+        libsvm.HEAPF64.set(new Float64Array(weight_label), weightlPtr/8);
+        
         this.paramPointer = libsvm._make_param(
             svm_type, kernel_type, degree,
             gamma, coef0, nu, cache_size, C, eps, p,
             shrinking, probability, nr_weight,
-            weight_label, weight
+            weightLabelPtr, weightlPtr
         );
     }
 
 
 }
-const main = async () => {
-    const features = [[0, 0], [1, 1], [1, 0], [0, 1]];
-    const labels = [0, 0, 0, 0];
-    
-    const svm = new SVM({
-        kernel_type: KERNEL_TYPE.RBF,
-        svm_type: SVM_TYPE.ONE_CLASS,
-        gamma: 1,
-        nu: 0.1
-    });
-    console.log(1)
-    
-    await svm.feedSamples(features, labels);
-    console.log(2)
-    
-    await svm.train();
-    console.log(3)
-    
-    const toPredict = [[0.5, 0.5], [1.5, 1]];
-    const expected = [1, -1];
-    svm.predict(toPredict[0]).then((it) => console.log(it))
-}
 
-main()
+export default SVM;

@@ -1,5 +1,6 @@
 #include "libsvm/svm.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include "emscripten.h"
 
 #define true 1
@@ -42,7 +43,7 @@ svm_node* init_node(double* data, int size) {
 // }
 
 EMSCRIPTEN_KEEPALIVE
-void free_mode(svm_model* model) {
+void free_model(svm_model* model) {
     svm_free_and_destroy_model(&model);
 }
 
@@ -79,32 +80,30 @@ svm_parameter* make_param(
                        float p, int shrinking, int probability, int nr_weight, 
                        int* weight_label, float* weight
                        ) {
-                        svm_parameter param;
-                        param.svm_type = svm_type;
-                        param.kernel_type = kernel_type;
-                        param.degree = 3;
-                        param.gamma = gamma;
-                        param.coef0 = coef0;
-                        param.nu = nu;
-                        param.cache_size = cache_size;
-                        param.C = C;
-                        param.eps = eps;
-                        param.p = p;
-                        param.shrinking = shrinking;
-                        param.probability = probability;
-                        param.nr_weight = nr_weight;
-                        param.weight_label = weight_label;
-                        param.weight = weight;
-
-                        return &param;
+                        svm_parameter* param = MALLOC(svm_parameter, 1);
+                        param->svm_type = svm_type;
+                        param->kernel_type = kernel_type;
+                        param->degree = degree;
+                        param->gamma = gamma;
+                        param->coef0 = coef0;
+                        param->nu = nu;
+                        param->cache_size = cache_size;
+                        param->C = C;
+                        param->eps = eps;
+                        param->p = p;
+                        param->shrinking = shrinking;
+                        param->probability = probability;
+                        param->nr_weight = nr_weight;
+                        param->weight_label = weight_label;
+                        param->weight = weight;
+                        return param;
                     }
 
 EMSCRIPTEN_KEEPALIVE
 svm_model* train_model(svm_problem* samples, svm_parameter* param) {
-    void (*print_func)(const char *) = NULL;
-    svm_set_print_string_function(print_func);
-    svm_model* model = svm_train(samples, &param);
-    svm_destroy_param(&param);
+    // svm_set_print_string_function(printf);
+    svm_model* model = svm_train(samples, param);
+    svm_destroy_param(param);
     return model;
 }
 
