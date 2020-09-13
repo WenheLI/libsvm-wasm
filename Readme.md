@@ -28,3 +28,4 @@ await svm.predict([3, 3]);
 - Benchmark V.S. native
 - More API
 - SIMD operation to enhance performance
+- Store Model using native fs API
