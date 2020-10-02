@@ -10,8 +10,8 @@ It allows you to directly run & train svm model in js env without installing any
   [emscripten](https://emscripten.org/docs/getting_started/index.html)
 
 ```bash
-git submodules init
-git submodules update
+git submodule init
+git submodule update
 make
 ```
 
