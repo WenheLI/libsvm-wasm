@@ -4,6 +4,17 @@
 This is a wasm export for [`libsvm`](https://github.com/cjlin1/libsvm)
 It allows you to directly run & train svm model in js env without installing any non-js dependency.
 
+## Build
+
+- prereq:
+  [emscripten](https://emscripten.org/docs/getting_started/index.html)
+
+```bash
+make
+```
+
+After this command, you will get the `wasm` in dist folder.
+
 ## Usage
 
 **Note:** No bundle support for now.
