@@ -14,6 +14,22 @@ const rawData = readFileSync(join(__dirname, 'data'))
 const label = rawData.map(it => parseInt(it[0]));
 const data = rawData.map(it => it.slice(1).map(it => parseFloat(it)));
 
-const svm = new SVM();
-svm.feedSamples(data, label);
-svm.train();
+// const svm = new SVM();
+// svm.feedSamples(data, label);
+// svm.train();
+
+async function p(data, label){
+
+  const svm = new SVM();
+  svm.feedSamples(data, label);
+  await svm.train();
+
+ 
+
+  const g = await svm.save("fme.txt");
+  console.log("saved_model",g);
+  // const pred2 = await svm.save(data[4]);
+  // return `Prediction: ${pred2}`;
+}
+
+p(data,label).then((data)=>{ console.log(data);});

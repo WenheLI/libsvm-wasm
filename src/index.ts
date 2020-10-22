@@ -156,6 +156,23 @@ class SVM {
         );
     }
 
+    public async save(name: string): Promise<boolean> {
+        await this.ready;
+
+        if (this.modelPointer == null) {
+            console.error("Model should be trained first");
+            return;
+        }
+
+        var buffer = libsvm._malloc(name.length+1);
+
+        // Write the string to memory
+        libsvm.stringToUTF8(name, buffer,name.length+1);
+        // const pred: boolean = libsvm._save_model(this.modelPointer, buffer);
+
+        return libsvm._save_model(this.modelPointer, buffer) as boolean;
+    }
+
 
 }
 
