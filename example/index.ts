@@ -26,10 +26,13 @@ async function p(data, label){
 
  
 
-  const g = await svm.save("fme.txt");
-  console.log("saved_model",g);
-  // const pred2 = await svm.save(data[4]);
-  // return `Prediction: ${pred2}`;
+  // const is_loaded = await svm.load("fme.txt");
+  // console.log("load_model",is_loaded);  // check if model is loaded
+
+  const is_saved = await svm.save("newfme.txt"); //saved the model
+  console.log("saved_model",is_saved); // check if the model is saved
+  const pred2 = await svm.predict(data[6]);
+  return `Prediction: ${pred2}`;
 }
 
-p(data,label).then((data)=>{ console.log(data);});
+p(data,label).then((data)=>{ console.log(data);}).catch(e=> console.log(e));

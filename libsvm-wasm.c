@@ -38,13 +38,12 @@ bool save_model(svm_model *model, const char *model_file_name)
     return true;
 }
 
-// EMSCRIPTEN_KEEPALIVE
-// svm_model* load_model(char* model) {
-//     FILE* f = fopen("model.txt", "w");
-//     fprintf(f, "%s", model);
-//     fcloase(f);
-//     return svm_load_model("model.txt");
-// }
+EMSCRIPTEN_KEEPALIVE
+svm_model *load_model(const char *model_file_name)
+{
+    svm_model *model = svm_load_model(model_file_name);
+    return model;
+}
 
 EMSCRIPTEN_KEEPALIVE
 void free_model(svm_model *model)

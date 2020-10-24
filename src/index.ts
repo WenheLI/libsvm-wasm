@@ -168,9 +168,24 @@ class SVM {
 
         // Write the string to memory
         libsvm.stringToUTF8(name, buffer,name.length+1);
-        // const pred: boolean = libsvm._save_model(this.modelPointer, buffer);
 
         return libsvm._save_model(this.modelPointer, buffer) as boolean;
+    }
+
+    public async load(name: string): Promise<boolean> {
+        await this.ready;
+        if (this.modelPointer == null) libsvm._free_model(this.modelPointer);
+
+        var buffer = libsvm._malloc(name.length+1);
+        libsvm.stringToUTF8(name, buffer,name.length+1);
+
+        this.modelPointer = libsvm._load_model(buffer);
+
+        if(this.modelPointer != null || this.modelPointer > 0){
+            return true;
+        }
+        return false;
+
     }
 
 
