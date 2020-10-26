@@ -1,6 +1,7 @@
 #include "libsvm/svm.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "emscripten.h"
 
 #define true 1
@@ -32,7 +33,17 @@ svm_node *init_node(double *data, int size)
 EMSCRIPTEN_KEEPALIVE
 bool save_model(svm_model *model, const char *model_file_name)
 {
-    int success = svm_save_model(model, model_file_name);
+    EM_ASM(
+        FS.mkdir('/working');
+        FS.mount(NODEFS, {root : '.'}, '/working'););
+
+    const char *cwd = "/working/";
+
+    char *fulltext = (char *)malloc(strlen(cwd) + strlen(model_file_name) + 1);
+
+    strcpy(fulltext, cwd);
+    strcat(fulltext, model_file_name);
+    int success = svm_save_model(fulltext, model);
     if (success < 0)
         return false;
     return true;
@@ -41,7 +52,17 @@ bool save_model(svm_model *model, const char *model_file_name)
 EMSCRIPTEN_KEEPALIVE
 svm_model *load_model(const char *model_file_name)
 {
-    svm_model *model = svm_load_model(model_file_name);
+    EM_ASM(
+        FS.mkdir('/load');
+        FS.mount(NODEFS, {root : '.'}, '/load'););
+
+    const char *cwd = "/load/";
+
+    char *fulltext = (char *)malloc(strlen(cwd) + strlen(model_file_name) + 1);
+
+    strcpy(fulltext, cwd);
+    strcat(fulltext, model_file_name);
+    svm_model *model = svm_load_model(fulltext);
     return model;
 }
 

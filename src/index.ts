@@ -187,6 +187,48 @@ class SVM {
         return false;
 
     }
+    public evaluate(label: Array<number>, pred: Array<number>): Array<string>{
+        //from the python implementation libsvm/python/commonutil.py
+        if(label.length != pred.length){
+            throw new Error(`length mismatch; actual label ${label.length} does not match prediction of length ${pred.length}`);
+        }
+
+        let total_correct: number = 0;
+        let total_error: number = 0;
+        let sumv =0;
+        let sumy = 0;
+        let sumvv = 0;
+        let sumyy = 0;
+        let sumvy = 0;
+        
+        for(let i=0; i < label.length; i++){
+            let label_i = label[i];
+            let pred_i  = pred[i];
+
+            if(label_i === pred_i){
+                total_correct +=1;
+            }
+
+            total_error += (pred_i-label_i)*(pred_i-label_i);
+            sumv += pred_i;
+            sumy += label_i;
+            sumvv += pred_i*pred_i;
+            sumyy += label_i*label_i;
+            sumvy += pred_i * label_i
+
+        }
+        let len = label.length;
+        let ACC = 100.0*total_correct/len;
+        let MSE = total_error/len;
+        let SCC: number;
+        try{
+            SCC = ((len*sumvy-sumv*sumy)*(len*sumvy-sumv*sumy))/((len*sumvv-sumv*sumv)*(len*sumyy-sumy*sumy));
+        }
+        catch(e){
+            SCC = parseFloat("nan");
+        }
+        return [ACC.toFixed(2),MSE.toFixed(3),SCC.toFixed(3)];
+    }
 
 
 }
