@@ -164,7 +164,7 @@ class SVM {
             return;
         }
 
-        var buffer = libsvm._malloc(name.length+1);
+        const buffer = libsvm._malloc(name.length+1);
 
         // Write the string to memory
         libsvm.stringToUTF8(name, buffer,name.length+1);
@@ -176,7 +176,7 @@ class SVM {
         await this.ready;
         if (this.modelPointer == null) libsvm._free_model(this.modelPointer);
 
-        var buffer = libsvm._malloc(name.length+1);
+        const buffer = libsvm._malloc(name.length+1);
         libsvm.stringToUTF8(name, buffer,name.length+1);
 
         this.modelPointer = libsvm._load_model(buffer);

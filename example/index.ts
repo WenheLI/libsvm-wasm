@@ -19,17 +19,6 @@ async function ml(data, label){
   const svm = new SVM();
   svm.feedSamples(data, label);
   await svm.train();
-
- 
-
-  // const is_loaded = await svm.load("fme.txt");
-  // console.log("load_model",is_loaded);  // check if model is loaded
-
-  // const is_saved = await svm.save("newfme.txt"); //saved the model
-  // console.log("saved_model",is_saved); // check if the model is saved
-
-  // const pred2 = await svm.predict(data[7]);
-  // console.log(`Prediction: ${pred2}`);
   
   let pred_data: Array<number> = [];
 
