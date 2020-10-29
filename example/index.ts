@@ -14,6 +14,21 @@ const rawData = readFileSync(join(__dirname, 'data'))
 const label = rawData.map(it => parseInt(it[0]));
 const data = rawData.map(it => it.slice(1).map(it => parseFloat(it)));
 
-const svm = new SVM();
-svm.feedSamples(data, label);
-svm.train();
+async function ml(data, label){
+
+  const svm = new SVM();
+  svm.feedSamples(data, label);
+  await svm.train();
+  
+  let pred_data: Array<number> = [];
+
+  for(let i in data){
+     let pred = await svm.predict(data[i])
+     pred_data.push(pred);
+  }
+
+  const evaluate = svm.evaluate(label, pred_data);
+  console.log(evaluate)
+}
+
+ml(data,label)
