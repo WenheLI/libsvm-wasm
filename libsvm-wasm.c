@@ -132,7 +132,6 @@ svm_parameter *make_param(
 EMSCRIPTEN_KEEPALIVE
 svm_model *train_model(svm_problem *samples, svm_parameter *param)
 {
-    // svm_set_print_string_function(printf);
     svm_model *model = svm_train(samples, param);
     svm_destroy_param(param);
     return model;

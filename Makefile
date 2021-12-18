@@ -14,6 +14,7 @@ wasm: libsvm-wasm.c svm.o libsvm/svm.h
 		rm -rf $(BUILD_DIR); 
 		mkdir -p $(BUILD_DIR);
 		$(CC) $(CFLAGS) libsvm-wasm.c svm.o -o $(BUILD_DIR)/libsvm.js $(EMCCFLAGS) -lnodefs.js
+		cp ./libsvm.d.ts ./dist/libsvm.d.ts
 
 clean: 
 	rm -rf dist/

@@ -1,5 +1,6 @@
-import * as module from '../dist/libsvm';
-let libsvm;
+import SVM_FACTORY from '../dist/libsvm';
+
+let libsvm: any;
 
 enum SVM_TYPE {
     C_SVC,
@@ -18,48 +19,56 @@ enum KERNEL_TYPE {
 }
 
 interface ISVMParam {
-    svm_type ? : SVM_TYPE;
-    kernel_type ? : KERNEL_TYPE;
-    degree ? : number;
-    gamma ? : number;
-    coef0 ? : number;
-    cache_size ? : number;
-    C ? : number;
-    nr_weight ? : number;
-    weight_label ? : Array < number > ;
-    weight ? : Array < number > ;
-    nu ? : number;
-    p ? : number;
-    shrinking ? : number;
-    probability ? : number;
+    svm_type: SVM_TYPE;
+    kernel_type: KERNEL_TYPE;
+    degree: number;
+    gamma: number;
+    coef0: number;
+    cache_size: number;
+    C: number;
+    nr_weight: number;
+    weight_label: Array<number> ;
+    weight: Array<number> ;
+    nu: number;
+    p: number;
+    shrinking: number;
+    probability: number;
 }
 
 class SVMParam {
-    public svm_type? = SVM_TYPE.C_SVC;
-    public kernel_type? = KERNEL_TYPE.RBF;
-    public degree?: number = 3;
-    public gamma?: number = 0;
-    public coef0?: number = 0;
-    public cache_size?: number = 100;
-    public C?: number = 1;
-    public nr_weight?: number = 0;
-    public weight_label?: Array < number > = [];
-    public weight?: Array < number > = [];
-    public nu?: number = 0.5;
-    public p?: number = 0.1;
-    public eps?: number = 1e-3;
-    public shrinking?: number = 0;
-    public probability?: number = 0;
 
-    constructor(param: ISVMParam) {
+    public param: ISVMParam = {
+        svm_type: SVM_TYPE.C_SVC,
+        kernel_type: KERNEL_TYPE.RBF,
+        degree: 3,
+        gamma: 0,
+        coef0: 0,
+        cache_size: 100,
+        C: 1,
+        nr_weight: 0,
+        weight_label: [],
+        weight: [],
+        nu: 0.5,
+        p: 0.1,
+        shrinking: 0,
+        probability: 0
+    };
+
+    public eps: number = 1e-3;
+
+    constructor(param: ISVMParam, eps: number = 1e-3) {
         if (typeof param !== 'object') return;
-        for (const key of Object.keys(param)) {
-            this[key] = param[key];
-        }
-        if (this.svm_type === SVM_TYPE.EPSILON_SVR || this.svm_type === SVM_TYPE.NU_SVR) {
-            if (this.gamma === 0) this.gamma = .1;
+        this.param = {
+            ...this.param,
+            ...param
+        };
+
+        this.eps = eps;
+
+        if (this.param.svm_type === SVM_TYPE.EPSILON_SVR || this.param.svm_type === SVM_TYPE.NU_SVR) {
+            if (this.param.gamma === 0) this.param.gamma = .1;
         } else {
-            if (this.gamma === 0) this.gamma = .5;
+            if (this.param.gamma === 0) this.param.gamma = .5;
         }
     }
 
@@ -67,26 +76,26 @@ class SVMParam {
 
 class SVM {
     readonly param: SVMParam;
-    private paramPointer: number;
-    private samplesPointer: number;
-    private modelPointer: number;
+    private paramPointer: number = -1;
+    private samplesPointer: number = -1;
+    private modelPointer: number = -1;
     private ready: Promise<void>;
 
     constructor(param?: SVMParam) {
         this.ready = new Promise(async (resolve) => {
-            libsvm = await module();
+            libsvm = await SVM_FACTORY();
             resolve();
         });
         
-        if (!param) this.param = new SVMParam({});
+        if (!param) this.param = new SVMParam({} as ISVMParam);
         else this.param = param;
         this.feedParam();
     }
 
     public async train() {
         await this.ready;
-        if (this.paramPointer == null || this.samplesPointer == null) return;
-        if (this.modelPointer == null) libsvm._free_model(this.modelPointer);
+        if (this.paramPointer == -1 || this.samplesPointer == -1) return;
+        if (this.modelPointer != -1) libsvm._free_model(this.modelPointer);
         this.modelPointer = libsvm._train_model(this.samplesPointer, this.paramPointer);
     }
 
@@ -95,7 +104,7 @@ class SVM {
 
         if (this.modelPointer == null) {
             console.error("Model should be trained first");
-            return;
+            return -1;
         }
 
         const dataPtr = libsvm._malloc(data.length * 8);
@@ -131,14 +140,14 @@ class SVM {
             nu,
             cache_size,
             C,
-            eps,
             p,
             shrinking,
             probability,
             nr_weight,
             weight_label,
             weight
-        } = this.param;
+        } = this.param.param;
+        const eps = this.param.eps;
 
         if (this.paramPointer == null) libsvm._free(this.paramPointer);
 
@@ -146,7 +155,7 @@ class SVM {
         libsvm.HEAP32.set(new Int32Array(weight_label), weightLabelPtr/4);
         
         const weightlPtr = libsvm._malloc(nr_weight * 8);
-        libsvm.HEAPF64.set(new Float64Array(weight_label), weightlPtr/8);
+        libsvm.HEAPF64.set(new Float64Array(weight), weightlPtr/8);
         
         this.paramPointer = libsvm._make_param(
             svm_type, kernel_type, degree,
@@ -161,7 +170,7 @@ class SVM {
 
         if (this.modelPointer == null) {
             console.error("Model should be trained first");
-            return;
+            return false;
         }
 
         const buffer = libsvm._malloc(name.length+1);

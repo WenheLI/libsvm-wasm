@@ -1,4 +1,4 @@
-import SVM from '../src/index';
+import SVM from '../src/';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
@@ -14,7 +14,7 @@ const rawData = readFileSync(join(__dirname, 'data'))
 const label = rawData.map(it => parseInt(it[0]));
 const data = rawData.map(it => it.slice(1).map(it => parseFloat(it)));
 
-async function ml(data, label){
+async function ml(data: any, label: any){
 
   const svm = new SVM();
   svm.feedSamples(data, label);
