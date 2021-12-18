@@ -89,11 +89,13 @@ class SVM {
         });
         if (!param) this.param = new SVMParam({} as ISVMParam);
         else this.param = param;
-        this.feedParam();
     }
 
     public train = async () => {
         await this.ready;
+        if (this.paramPointer == -1) {
+            await this.feedParam();
+        }
         if (this.paramPointer == -1 || this.samplesPointer == -1) return;
         if (this.modelPointer != -1) libsvm._free_model(this.modelPointer);
         this.modelPointer = libsvm._train_model(this.samplesPointer, this.paramPointer);
