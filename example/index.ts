@@ -1,4 +1,4 @@
-import SVM from '../src/';
+import { SVM } from '../src/';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 

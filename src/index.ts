@@ -1,6 +1,5 @@
-import SVM_FACTORY from '../dist/libsvm';
-
-let libsvm: any;
+import svmFactory, { LibsvmModlue } from '../dist/libsvm';
+let libsvm: LibsvmModlue;
 
 enum SVM_TYPE {
     C_SVC,
@@ -82,26 +81,26 @@ class SVM {
     private ready: Promise<void>;
 
     constructor(param?: SVMParam) {
-        this.ready = new Promise(async (resolve) => {
-            libsvm = await SVM_FACTORY();
-            resolve();
+        this.ready = new Promise((resolve, reject) => {
+            svmFactory().then((lib) => {
+                    libsvm = lib;
+                    resolve();
+                });
         });
-        
         if (!param) this.param = new SVMParam({} as ISVMParam);
         else this.param = param;
         this.feedParam();
     }
 
-    public async train() {
+    public train = async () => {
         await this.ready;
         if (this.paramPointer == -1 || this.samplesPointer == -1) return;
         if (this.modelPointer != -1) libsvm._free_model(this.modelPointer);
         this.modelPointer = libsvm._train_model(this.samplesPointer, this.paramPointer);
     }
 
-    public async predict(data: Array<number>): Promise<number> {
+    public predict = async (data: Array<number>): Promise<number> => {
         await this.ready;
-
         if (this.modelPointer == null) {
             console.error("Model should be trained first");
             return -1;
@@ -113,9 +112,8 @@ class SVM {
         return libsvm._predict_one(this.modelPointer, dataPtr, data.length) as number;
     }
 
-    public async feedSamples(data: Array<Array<number>>, labels: Array<number>) {
+    public feedSamples = async (data: Array<Array<number>>, labels: Array<number>) => {
         await this.ready;
-
         if (this.samplesPointer == null) libsvm._free_sample(this.samplesPointer);
 
         const encodeData = new Float64Array(data.reduce((prev, curr) => prev.concat(curr), []));
@@ -129,7 +127,7 @@ class SVM {
         this.samplesPointer = libsvm._make_samples(dataPtr, labelPtr, data.length, data[0].length);
     }
 
-    public async feedParam() {
+    public feedParam = async () => {
         await this.ready;
         const {
             svm_type,
@@ -165,9 +163,8 @@ class SVM {
         );
     }
 
-    public async save(name: string): Promise<boolean> {
+    public save = async (name: string): Promise<boolean> => {
         await this.ready;
-
         if (this.modelPointer == null) {
             console.error("Model should be trained first");
             return false;
@@ -181,7 +178,7 @@ class SVM {
         return libsvm._save_model(this.modelPointer, buffer) as boolean;
     }
 
-    public async load(name: string): Promise<boolean> {
+    public load = async (name: string): Promise<boolean> => {
         await this.ready;
         if (this.modelPointer == null) libsvm._free_model(this.modelPointer);
 
@@ -196,7 +193,7 @@ class SVM {
         return false;
 
     }
-    public evaluate(label: Array<number>, pred: Array<number>): Array<string>{
+    public evaluate = (label: Array<number>, pred: Array<number>): Array<string> =>{
         //from the python implementation libsvm/python/commonutil.py
         if(label.length != pred.length){
             throw new Error(`length mismatch; actual label ${label.length} does not match prediction of length ${pred.length}`);
@@ -204,7 +201,7 @@ class SVM {
 
         let total_correct: number = 0;
         let total_error: number = 0;
-        let sumv =0;
+        let sumv = 0;
         let sumy = 0;
         let sumvv = 0;
         let sumyy = 0;
@@ -242,4 +239,9 @@ class SVM {
 
 }
 
-export default SVM;
+export {
+    SVM,
+    SVM_TYPE,
+    KERNEL_TYPE,
+    SVMParam
+};

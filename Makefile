@@ -18,3 +18,4 @@ wasm: libsvm-wasm.c svm.o libsvm/svm.h
 
 clean: 
 	rm -rf dist/
+	rm -rf ./svm.o
