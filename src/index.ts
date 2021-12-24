@@ -123,8 +123,9 @@ class SVM {
         const dataPtr = libsvm._malloc(encodeData.length * 8);
         libsvm.HEAPF64.set(encodeData, dataPtr/8);
         
-        const labelPtr = libsvm._malloc(labels.length * 8);
-        libsvm.HEAPF64.set(encodeData, labelPtr/8);
+        const encodeLabelData = new Float64Array(labels);
+        const labelPtr = libsvm._malloc(encodeLabelData.length * 8);
+        libsvm.HEAPF64.set(encodeLabelData, labelPtr/8);
         
         this.samplesPointer = libsvm._make_samples(dataPtr, labelPtr, data.length, data[0].length);
     }
