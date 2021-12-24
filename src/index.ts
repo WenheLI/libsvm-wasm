@@ -18,29 +18,29 @@ enum KERNEL_TYPE {
 }
 
 interface ISVMParam {
-    svm_type: SVM_TYPE;
-    kernel_type: KERNEL_TYPE;
-    degree: number;
-    gamma: number;
-    coef0: number;
-    cache_size: number;
-    C: number;
-    nr_weight: number;
-    weight_label: Array<number> ;
-    weight: Array<number> ;
-    nu: number;
-    p: number;
-    shrinking: number;
-    probability: number;
+    svm_type?: SVM_TYPE;
+    kernel_type?: KERNEL_TYPE;
+    degree?: number;
+    gamma?: number;
+    coef0?: number;
+    cache_size?: number;
+    C?: number;
+    nr_weight?: number;
+    weight_label?: Array<number> ;
+    weight?: Array<number> ;
+    nu?: number;
+    p?: number;
+    shrinking?: number;
+    probability?: number;
 }
 
 class SVMParam {
 
     public param: ISVMParam = {
-        svm_type: SVM_TYPE.C_SVC,
+        svm_type: SVM_TYPE.EPSILON_SVR,
         kernel_type: KERNEL_TYPE.RBF,
         degree: 3,
-        gamma: 0,
+        gamma: 1/(2*6.75),
         coef0: 0,
         cache_size: 100,
         C: 1,
@@ -49,7 +49,7 @@ class SVMParam {
         weight: [],
         nu: 0.5,
         p: 0.1,
-        shrinking: 0,
+        shrinking: 1,
         probability: 0
     };
 
@@ -244,6 +244,7 @@ class SVM {
 
 export {
     SVM,
+    ISVMParam,
     SVM_TYPE,
     KERNEL_TYPE,
     SVMParam
