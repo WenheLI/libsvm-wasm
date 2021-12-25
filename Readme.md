@@ -26,13 +26,13 @@ You may want to build on yourself or use `ts-node` to write a ts script.
 import {SVM} from './src/libsvm';
 
 const svm = new SVM();
-
+await svm.init()
 const data = [[-1, -1], [1, 1], [2, 2], [-2, -2]]
 const label = [-1, 1, 1, -1];
 
-await svm.feedSamples(data, label);
+svm.feedSamples(data, label);
 await svm.train();
-await svm.predict([3, 3]);
+svm.predict([3, 3]);
 ```
 
 ## Roadmap
