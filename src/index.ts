@@ -78,21 +78,31 @@ class SVM {
     private paramPointer: number = -1;
     private samplesPointer: number = -1;
     private modelPointer: number = -1;
-    private ready: Promise<void>;
-
+    
     constructor(param?: SVMParam) {
-        this.ready = new Promise((resolve, reject) => {
-            svmFactory().then((lib) => {
-                    libsvm = lib;
-                    resolve();
-                });
-        });
         if (!param) this.param = new SVMParam({} as ISVMParam);
         else this.param = param;
     }
 
+    public init = async () => {
+      libsvm = await svmFactory()
+    }
+
+    public checkInitialization = () => {
+      if(!libsvm){
+        throw new Error(`
+        In order to use this SVM class, you'll need to initialize the svm (which grabs the WASM module and loads it asynchronously).
+        Here's some example code.
+
+        let svm = new SVM()
+        await svm.init()
+        svm.train(data)
+        `)
+      }
+    }
+
     public train = async () => {
-        await this.ready;
+        this.checkInitialization()
         if (this.paramPointer == -1) {
             await this.feedParam();
         }
@@ -101,8 +111,8 @@ class SVM {
         this.modelPointer = libsvm._train_model(this.samplesPointer, this.paramPointer);
     }
 
-    public predict = async (data: Array<number>): Promise<number> => {
-        await this.ready;
+    public predict = (data: Array<number>): number => {
+        this.checkInitialization()
         if (this.modelPointer == null) {
             console.error("Model should be trained first");
             return -1;
@@ -114,8 +124,8 @@ class SVM {
         return libsvm._predict_one(this.modelPointer, dataPtr, data.length) as number;
     }
 
-    public feedSamples = async (data: Array<Array<number>>, labels: Array<number>) => {
-        await this.ready;
+    public feedSamples = (data: Array<Array<number>>, labels: Array<number>) => {
+        this.checkInitialization()
         if (this.samplesPointer == null) libsvm._free_sample(this.samplesPointer);
 
         const encodeData = new Float64Array(data.reduce((prev, curr) => prev.concat(curr), []));
@@ -130,8 +140,8 @@ class SVM {
         this.samplesPointer = libsvm._make_samples(dataPtr, labelPtr, data.length, data[0].length);
     }
 
-    public feedParam = async () => {
-        await this.ready;
+    public feedParam = () => {
+        this.checkInitialization()
         const {
             svm_type,
             kernel_type,
@@ -166,8 +176,8 @@ class SVM {
         );
     }
 
-    public save = async (name: string): Promise<boolean> => {
-        await this.ready;
+    public save = (name: string): boolean => {
+        this.checkInitialization()
         if (this.modelPointer == null) {
             console.error("Model should be trained first");
             return false;
@@ -181,8 +191,8 @@ class SVM {
         return libsvm._save_model(this.modelPointer, buffer) as boolean;
     }
 
-    public load = async (name: string): Promise<boolean> => {
-        await this.ready;
+    public load = (name: string): boolean => {
+        this.checkInitialization()
         if (this.modelPointer == null) libsvm._free_model(this.modelPointer);
 
         const buffer = libsvm._malloc(name.length+1);
